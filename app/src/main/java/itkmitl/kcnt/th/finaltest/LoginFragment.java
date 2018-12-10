@@ -1,6 +1,7 @@
 package itkmitl.kcnt.th.finaltest;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -21,6 +22,9 @@ import itkmitl.kcnt.th.finaltest.module.Account;
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "LOGIN";
+    private static final String isLogin = "loginStatus";
+    private SharedPreferences loginCheck;
+    private SharedPreferences.Editor loginChange;
 
     private SQLiteDatabase myDB;
     private Account account;
@@ -74,12 +78,12 @@ public class LoginFragment extends Fragment {
                 if (username.isEmpty() || password.isEmpty()) {
                     Toast.makeText(getActivity(), "กรุณาใส่ข้อมูลให้ครบถ้วน", Toast.LENGTH_SHORT).show();
                 } else {
-                    Cursor loginCheck = myDB.rawQuery("select * from account where username = '" + username + "' and password = '" + password + "'", null);
-                    if (loginCheck.getCount() > 0) {
-                        loginCheck.move(1);
-                        account.setPrimaryid(loginCheck.getInt(0));
-                        account.setUsername(loginCheck.getString(1));
-                        account.setPassword(loginCheck.getString(2));
+                    Cursor loginCursorCheck = myDB.rawQuery("select * from account where username = '" + username + "' and password = '" + password + "'", null);
+                    if (loginCursorCheck.getCount() > 0) {
+                        loginCursorCheck.move(1);
+                        account.setPrimaryid(loginCursorCheck.getInt(0));
+                        account.setUsername(loginCursorCheck.getString(1));
+                        account.setPassword(loginCursorCheck.getString(2));
 
                         Cursor myCheck = myDB.rawQuery("select * from my where account_id = '" + account.getPrimaryid() + "'", null);
                         if (myCheck.getCount() > 0) {
@@ -88,7 +92,13 @@ public class LoginFragment extends Fragment {
                             account.setPhonenumber(myCheck.getString(2));
 
                             myCheck.close();
-                            loginCheck.close();
+                            loginCursorCheck.close();
+
+                            loginCheck = getActivity().getSharedPreferences(isLogin, Context.MODE_PRIVATE);
+                            loginChange = loginCheck.edit();
+                            loginChange.putString("accountId", String.valueOf(account.getPrimaryid()));
+                            loginChange.putBoolean("isLogin", true);
+                            loginChange.commit();
 
                             getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.main_view, new WelcomeFragment()).commit();
                         }
