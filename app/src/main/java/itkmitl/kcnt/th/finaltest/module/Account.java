@@ -5,7 +5,7 @@ public class Account {
     private static Account accountInstance;
 
     private int primaryid;
-    private String username;
+    private String username = null;
     private String password;
     private String fullname;
     private String phonenumber;

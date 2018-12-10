@@ -1,5 +1,8 @@
 package itkmitl.kcnt.th.finaltest;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,10 +14,16 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import itkmitl.kcnt.th.finaltest.module.Account;
 
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "LOGIN";
+
+    private SQLiteDatabase myDB;
+    private Account account;
 
     private EditText zUsername;
     private EditText zPassword;
@@ -30,8 +39,11 @@ public class LoginFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        account = Account.getAccountInstance();
+        myDB = getActivity().openOrCreateDatabase("my.db", Context.MODE_PRIVATE, null);
         loginFragmentElements();
         initSignup();
+        initSignin();
     }
 
     private void loginFragmentElements() {
@@ -48,6 +60,42 @@ public class LoginFragment extends Fragment {
             public void onClick(View v) {
                 Log.d(TAG, "Signup : clicked");
                 getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.main_view, new RegisterFragment()).addToBackStack(null).commit();
+            }
+        });
+    }
+
+    private void initSignin() {
+        zSignin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String username = zUsername.getText().toString();
+                String password = zPassword.getText().toString();
+
+                if (username.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(getActivity(), "กรุณาใส่ข้อมูลให้ครบถ้วน", Toast.LENGTH_SHORT).show();
+                } else {
+                    Cursor loginCheck = myDB.rawQuery("select * from account where username = '" + username + "' and password = '" + password + "'", null);
+                    if (loginCheck.getCount() > 0) {
+                        loginCheck.move(1);
+                        account.setPrimaryid(loginCheck.getInt(0));
+                        account.setUsername(loginCheck.getString(1));
+                        account.setPassword(loginCheck.getString(2));
+
+                        Cursor myCheck = myDB.rawQuery("select * from my where account_id = '" + account.getPrimaryid() + "'", null);
+                        if (myCheck.getCount() > 0) {
+                            myCheck.move(1);
+                            account.setFullname(myCheck.getString(1));
+                            account.setPhonenumber(myCheck.getString(2));
+
+                            myCheck.close();
+                            loginCheck.close();
+
+                            getActivity().getSupportFragmentManager().beginTransaction().replace(R.id.main_view, new WelcomeFragment()).commit();
+                        }
+                    } else {
+                        Toast.makeText(getActivity(), "ไม่พบข้อมูลผู้ใช้", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
         });
     }

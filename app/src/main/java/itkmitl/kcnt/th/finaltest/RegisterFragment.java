@@ -88,6 +88,10 @@ public class RegisterFragment extends Fragment {
                     Log.d(TAG, "Both passwords must be the same");
                     Toast.makeText(getActivity(), "กรุณาใส่รหัสผ่านทั้ง 2 ช่องให้เหมือนกัน", Toast.LENGTH_SHORT).show();
                     zLoading.dismiss();
+                } else if(phonenumber.length() != 10) {
+                    Log.d(TAG, "The phone number is not complete");
+                    Toast.makeText(getActivity(), "กรุณาใส่เบอร์โทรศัพท์ให้ครบ", Toast.LENGTH_SHORT).show();
+                    zLoading.dismiss();
                 } else {
                     Cursor cursor = myDB.rawQuery("select * from account where username = '" + username + "'", null);
                     if (cursor.getCount() != 1) {
